@@ -1,54 +1,36 @@
+# encoding: utf-8
+import pandas as pd
 from pymongo import MongoClient
 import nltk
+from nltk.stem import RSLPStemmer
+from gensim.utils import simple_preprocess
+
+#nltk.download()
 
 conn = MongoClient('mongodb://localhost:27017')
 print(conn)
 db = conn.tcc
-twitter = db.twitter
 twitter_clean = db.twitter_clean
 
-list_twitters = twitter.find({})
+to_pandas = twitter_clean.find({})  # Get data from MongoDB
 
-#nltk.download()
-stop_words = nltk.corpus.stopwords.words("portuguese")
+df = pd.DataFrame(list(to_pandas))  # Convert data to Pandas DataFrame
 
-def cleaning(text):
-    stop_words = nltk.corpus.stopwords.words("portuguese")
-    
-    stopchars = ['!', '.', ';', ':', ',', '>', '<', '?', '/', '"', '%', '*', '#',
-    '=', '+', '(', ')', '|' ]
+del df['_id']       # Delete column _id
 
-    startchar = ['@', '.@', '#', '.#', 'http', '.http']
+                # Tokenize words in sentences and keep in a new column
+df['tokenized_text'] = [simple_preprocess(line, deacc=True) for line in df['tweet_text']] 
+# print(df['tokenized_text'].head(10))
 
+                # Stemm sentences
+for idx, sentence in enumerate(df['tokenized_text']):
+    df['tokenized_text'][idx] = Stemming(sentence)
 
-    ltext = text.lower()    #Convert sentence to lowcaps
-    ntext = ltext.split()
-    _ntext = []
-    for word in ntext:
-        check = True
-        for i in startchar:             # Checks if words starts with 
-            if word.startswith(i):      # characters from list startchar
-                check = False
-        if check:
-            check2 = True
-            for j in stop_words:         # Checks if word is from list stopwords 
-                if word == j:           
-                    check2 = False    
-            if check2:
-                for w in stopchars:             # Removes special characters if it's
-                    word = word.replace(w, '')  # in the list stopchars 
-                _ntext.append(word)                     # Puts word in new text list 
+# print(df['tokenized_text'].head(10))
 
-    jtext = " ".join(_ntext)
-        
-    return jtext
-
-for idx, i in enumerate(list_twitters):
-    tweet_clean = cleaning(i['tweet_text'])
-    i['tweet_text'] = tweet_clean
-    #print(tweet_clean + " " + str(idx))
-    twitter_clean.insert_one(i)
-    # if idx >= 1000:
-    #     break
-
-
+def Stemming(sentence):         # Function to Stemm words in sentences 
+    stemmer = RSLPStemmer()     # to their root form
+    phrase = []
+    for word in sentence:
+        phrase.append(stemmer.stem(word.lower()))
+    return phrase
