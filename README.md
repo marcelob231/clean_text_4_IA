@@ -1,3 +1,23 @@
+# 3 small programs to prepare database texts for mining
+
+# remove_extras.py
+1. Eliminate stopwords.
+2. Deletes special characters.
+3. Eliminate words that start with addresses and tags.
+4. Normalizes to lowercase.
+
+# noduplicates.py
+1. Delete deduplicates in database by tweet id.
+
+# preparation.py
+1. Transforms MongoDb json into Pandas Dataframe.
+2. Tokenize the sentences.
+3. Stemming to reduce words to their base form.
+
+
+-----------------------------------------------------------------------------
+
+
 # 3 pequenos programas para preparar textos do banco de dados para mineração.
 
 # remove_extras.py
